@@ -1,1 +1,1 @@
-# message_queue
+THis is RabitMQ queue demo
