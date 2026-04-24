@@ -1,0 +1,30 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.0-management
+    container_name: rabbitmq-broker
+    environment:
+      - RABBITMQ_DEFAULT_USER=${MQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${MQ_PASSWORD}
+    ports:
+      - "${MQ_AMQP_PORT}:5672"
+      - "${MQ_MANAGEMENT_PORT}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  java-app:
+    build: .
+    container_name: mq-java-app
+    ports:
+      - "${JAVA_BACKEND_PORT}:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      # NOTE: Inside Docker, we use the SERVICE NAME 'rabbitmq' instead of 'localhost'
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${MQ_USERNAME}
+      - SPRING_RABBITMQ_PASSWORD=${MQ_PASSWORD}
